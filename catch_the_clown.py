@@ -81,12 +81,18 @@ while running:
             # check if the clown is caught
             if clown_rect.collidepoint(mouse_x, mouse_y):
                 score += 1
-                score_text = font.render('Score: ' + str(score), True, YELLOW)
-                clown_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
-                clown_velocity = CLOWN_STARTING_VELOCITY
-                clown_dx = random.choice([-1, 1])
-                clown_dy = random.choice([-1, 1])
+                # clown_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+                clown_velocity += CLOWN_ACCELERATION
+                previous_dx = clown_dx
+                previous_dy = clown_dy
+                while clown_dx == previous_dx and clown_dy == previous_dy:
+                    clown_dx = random.choice([-1, 1])
+                    clown_dy = random.choice([-1, 1])
+
                 click_sound.play()
+            else:
+                player_lives -= 1
+                miss_sound.play()
 
     # move the clown
     clown_rect.x += clown_velocity * clown_dx
@@ -99,7 +105,32 @@ while running:
     if clown_rect.bottom >= WINDOW_HEIGHT or clown_rect.top <= 0:
         clown_dy *= -1
 
-        # background should be blitted first
+    score_text = font.render('Score: ' + str(score), True, YELLOW)
+    lives_text = font.render('Lives: ' + str(player_lives), True, YELLOW)
+
+    if player_lives <= 0:
+        display_surface.blit(game_over_text, game_over_rect)
+        display_surface.blit(continue_text, continue_rect)
+        pygame.display.update()
+        pygame.mixer.music.stop()
+        is_paused = True
+
+        while is_paused:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    player_lives = PLAYER_STARTING_LIVES
+                    score = 0
+                    clown_rect.center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+                    clown_velocity = CLOWN_STARTING_VELOCITY
+                    clown_dx = random.choice([-1, 1])
+                    clown_dy = random.choice([-1, 1])
+                    pygame.mixer.music.play(-1)
+                    is_paused = False
+                if event.type == pygame.QUIT:
+                    is_paused = False
+                    running = False
+
+    # background should be blitted first
     # Blit the background
     display_surface.blit(background_image, background_rect)
 
